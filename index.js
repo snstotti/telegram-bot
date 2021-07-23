@@ -37,6 +37,13 @@ const arrSupport = []
 
 const idAdminPanel = -1001203491315
 
+const objbtnTitle = [
+    {textBtn:'БигБургер меню', callbackData: 'burgerMenu'},
+    {textBtn:'Фитнес меню', callbackData: 'fitnesMenu'},
+    {textBtn:'Мясное меню', callbackData: 'meanMenu'},
+    {textBtn:'Нагеты Меню', callbackData: 'nagetsMenu'},
+]
+
 const start = () => {
     
     bot.on('message', async (msg, t) => {
@@ -119,12 +126,36 @@ const start = () => {
                 }
             }
             bot.sendMessage(chatId,`Что именно вас инетересует?`,menuBtn)
+           
         }
+        const subMenuShow=(textBtn,callbackData)=>{
+            const btn = {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: textBtn, callback_data: callbackData }],
+                        
+                    ]
+                }
+            }
+            const url = './img/burger.jpg';
+            bot.sendPhoto(chatId, './img/burger.jpg',btn);
+        }
+        const backBtn =()=>{
+            const back = {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: 'BACK', callback_data: 'btnBack' }],
+                    ]
+                }
+            }
+            bot.sendMessage(chatId,'Вернуться назад',back)
+        }
+
         
         switch (callbackData) {
             case 'order':
-                await showOrders(completedOrders)
-                break
+                return showOrders(completedOrders)
+                
             case 'menu':
                 return menuShow()
               
@@ -138,7 +169,9 @@ const start = () => {
                 return bot.sendMessage(chatId, 'Благодарим вас за подписку!')
 
             case 'menuBtn':
-                return bot.sendMessage(chatId, 'menuBtn!')
+                await backBtn()
+                return objbtnTitle.map(el=>subMenuShow(el.textBtn,el.callbackData))
+
             case 'pizza':
                 return bot.sendMessage(chatId, 'pizza!')
             case 'burger':
@@ -148,10 +181,12 @@ const start = () => {
               
             default:
                 return bot.sendMessage(chatId, 'fuck')
-          }
+        }
+
+        
            
     })
-
+    
 }
 
 start()
