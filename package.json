@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon ./index.js",
+    "dev": "nodemon",
     "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "livereload": "^0.9.3",
     "node-telegram-bot-api": "^0.53.0"
   }
 }

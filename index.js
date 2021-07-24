@@ -36,21 +36,47 @@ const completedOrders = [
 const arrSupport = []
 
 const idAdminPanel = -1001203491315
+const fastfoodMenuGrum = -1001512473260
 
-const objbtnTitle = [
-    {textBtn:'БигБургер меню', callbackData: 'burgerMenu'},
-    {textBtn:'Фитнес меню', callbackData: 'fitnesMenu'},
-    {textBtn:'Мясное меню', callbackData: 'meanMenu'},
-    {textBtn:'Нагеты Меню', callbackData: 'nagetsMenu'},
-]
+const objbtnTitle = {
+    menu: [
+        { textBtn: 'БигБургер меню', callbackData: 'burgerMenu' },
+        { textBtn: 'Фитнес меню', callbackData: 'fitnesMenu' },
+        { textBtn: 'Мясное меню', callbackData: 'meanMenu' },
+        { textBtn: 'Нагетсы меню', callbackData: 'nagetsMenu' },
+    ],
+    pizza: [
+        { textBtn: 'Пицца с ветчиной', callbackData: 'ham' },
+        { textBtn: 'Пицца мексикана', callbackData: 'meksikana' },
+        { textBtn: 'Пицца моцарела', callbackData: 'mocarela' },
+        { textBtn: 'Пицца с салями', callbackData: 'salymi' },
+    ],
+    burger: [
+        { textBtn: 'БигБургер', callbackData: 'bigBurger' },
+        { textBtn: 'Крабс-бургер', callbackData: 'crabsBurger' },
+        { textBtn: 'Чиз-бургек', callbackData: 'cheesBurger' },
+        { textBtn: 'Бургер', callbackData: 'burger' },
+    ],
+    drink: [
+        { textBtn: 'Лимонад', callbackData: 'lemonade' },
+        { textBtn: 'Пиво', callbackData: 'beer' },
+        { textBtn: 'Вода с газом', callbackData: 'waterGas' },
+        { textBtn: 'Вода без газа', callbackData: 'water' },
+    ],
+}
+
+const botMessageId = []
 
 const start = () => {
-    
+   
     bot.on('message', async (msg, t) => {
         const text = msg.text
         const chatId = msg.chat.id
+
+        // console.log(chatId);
+
         const userName = msg.from.username
-        // console.log(msg);
+        
         const opts = {
             reply_markup: {
                 inline_keyboard: [
@@ -132,15 +158,16 @@ const start = () => {
             const btn = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: textBtn, callback_data: callbackData }],
+                        [{ text:textBtn , callback_data: callbackData }],
                         
                     ]
                 }
             }
-            const url = './img/burger.jpg';
-            bot.sendPhoto(chatId, './img/burger.jpg',btn);
+            let url = './img/burger.jpg'
+            bot.sendPhoto(chatId, url ,btn).then(prop=>botMessageId.push(prop.message_id))
+            console.log(botMessageId);
         }
-        const backBtn =()=>{
+        const  backBtn =()=>{
             const back = {
                 reply_markup: {
                     inline_keyboard: [
@@ -148,10 +175,20 @@ const start = () => {
                     ]
                 }
             }
-            bot.sendMessage(chatId,'Вернуться назад',back)
+            console.log(botMessageId[0])
+                if(botMessageId.length > 0){
+                    return bot.sendMessage(chatId,'Вернуться назад',back)
+                }
+                
+           
         }
+        const listFood =(arr)=>{
 
-        
+            setTimeout(() =>backBtn(),1500)
+            arr.map(el=>subMenuShow(el.textBtn,el.callbackData))
+           
+        }
+       
         switch (callbackData) {
             case 'order':
                 return showOrders(completedOrders)
@@ -168,25 +205,24 @@ const start = () => {
             case 'subscribe':
                 return bot.sendMessage(chatId, 'Благодарим вас за подписку!')
 
-            case 'menuBtn':
-                await backBtn()
-                return objbtnTitle.map(el=>subMenuShow(el.textBtn,el.callbackData))
-
+            case 'menuBtn': 
+               return listFood(objbtnTitle.menu)
             case 'pizza':
-                return bot.sendMessage(chatId, 'pizza!')
-            case 'burger':
-                return bot.sendMessage(chatId, 'burger!')
+                return listFood(objbtnTitle.pizza)
+            case 'burgerMenu':
+                return listFood(objbtnTitle.burger)
             case 'drink':
-                return bot.sendMessage(chatId, 'drink!')
-              
+                return listFood(objbtnTitle.drink)
+            case 'btnBack': 
+            // await console.log(toString(botMessageId[0]))
+            await bot.deleteMessage(chatId, botMessageId[-1]).then(res=>console.log(res))
+                break
+                // return bot.deleteMessage(chatId, toString(botMessageId[-1])).then(res=>console.log(res))
             default:
                 return bot.sendMessage(chatId, 'fuck')
         }
-
-        
-           
     })
-    
+  
 }
 
 start()
