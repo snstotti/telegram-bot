@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "nodemon index.js -L",
     "start": "node index.js"
   },
   "author": "",
@@ -12,5 +12,8 @@
   "dependencies": {
     "livereload": "^0.9.3",
     "node-telegram-bot-api": "^0.53.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
   }
 }
