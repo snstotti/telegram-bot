@@ -18,6 +18,9 @@ const listBtn = {
     btnBack: [
         { text: 'Назад', callback: 'back' }
     ],
+    btnBackSubMenu:[
+        { text: 'BACK', callback: 'btnBack' }
+    ],
     menuBtn: [
         { text: 'Меню', callback: 'menuBtn' },
         { text: 'Пицца', callback: 'pizza' },
@@ -41,6 +44,14 @@ const listBtn = {
     btnDescription: [
         { text: 'Добавить в заказ', callback: 'addOrder' },
         { text: 'Назад', callback: 'back' }
+    ],
+    subscribeBtn: [
+        { text: 'Подписаться', callback_data: 'subscribe' }
+    ],
+    futureOrder:[
+        { text: 'Да, оплатить заказ', callback: 'pay' },
+        { text: 'Нет, изменить данные', callback: 'editData' },
+        { text: 'Отмена', callback: 'Cancel' },
     ]
 }
 

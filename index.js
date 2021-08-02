@@ -1,20 +1,17 @@
+require('dotenv').config()
 const TelegramApi = require('node-telegram-bot-api')
 const objbtnTitle = require('./dataSubMenu')
 const listTextMessage = require('./textMessage/textMessage')
 const listBtn = require('./btn/btn')
 const pureFunction = require('./pureFunction')
 
-const token = '1925452654:AAFtRbRRnXV8nV9UIE4ulCgcB4MnU7UWXRc'
 
-const bot = new TelegramApi(token, { polling: true })
+const bot = new TelegramApi(process.env.BOT_TOKEN, { polling: true })
 
 bot.setMyCommands([
     { command: '/start', description: 'Начало работы' },
     { command: '/keyboard', description: 'Вызвать клавматуру' },
 ])
-
-
-
 
 const completedOrders = [
     {
@@ -60,39 +57,40 @@ const{
     btnAddComment,baseMenuBtn,
     btnBack,menuBtn,
     btnAddAddOrder,btnPaymentMethod,
-    btnResultStatus,btnDescription}=listBtn
+    btnResultStatus,btnDescription,
+    subscribeBtn,btnBackSubMenu,
+    futureOrder}=listBtn
 
-const{startText}=listTextMessage
+const{startText,getPhone,
+    subscribe,addComment,
+    supportSuccsess,
+    support,wrongСommand,
+    addOrder,futureOrderText,
+    addressText,enterCommentText,
+    paymentMethodText,paymentCardText,
+    paymentCashText,question,
+    thanksSubscribing}=listTextMessage
+
 const{createBtn}=pureFunction
 
 
 const start = () => {
-
+    let userName
     let chatId
-    let userName = ''
-
-    const descriptionOfTheFutureOrder = () => {
-        const b = [
-            { text: 'Да, оплатить заказ', callback: 'pay' },
-            { text: 'Нет, изменить данные', callback: 'editData' },
-            { text: 'Отмена', callback: 'Cancel' },
-        ]
-        const text = `Ваш заказ: \n *Описание* \n Цена (с доставкой): 350грн \n Примерное время доставки: 1 час \n Всё верно?`
-        bot.sendMessage(chatId, text, createBtn(b)).then(el => messageOrder.push(el.message_id))
-    }
-
     const deleteMessage = ( idArr) => {
-        idArr.map(id => bot.deleteMessage(chatId, id))
+        return idArr.map(id => bot.deleteMessage(chatId, id))
+     }
+     const descriptionOfTheFutureOrder = () => {
+        bot.sendMessage(chatId, futureOrderText, createBtn(futureOrder))
+            .then(el => messageOrder.push(el.message_id))
     }
-
     bot.on('message', async (msg, t) => {
         const text = msg.text
         chatId = msg.chat.id
-        // console.log(text);
         const userName = msg.from.username
-
+        
         if (text === '/start') {
-            return bot.sendMessage(chatId, startText(msg.from.username), baseMenuBtn)
+            return bot.sendMessage(chatId, startText(userName), baseMenuBtn)
         }
         
         if (text === '/keyboard') {
@@ -102,13 +100,13 @@ const start = () => {
             objOrder.address = text.toLowerCase().replace(/\/address/g, '')
             deleteMessage(messageOrder)
             messageOrder = []
-            return bot.sendMessage(chatId, 'Введите номер телефона(+380)\n Перед сообщением введите команду "/phone"', createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
+            return bot.sendMessage(chatId, getPhone, createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
         }
         if (text.includes('/phone')) {
             objOrder.phone = text.toLowerCase().replace(/\/phone/g, '')
             deleteMessage(messageOrder)
             messageOrder = []
-            return bot.sendMessage(chatId, 'Добавить комментарий?', createBtn(btnAddComment)).then(el => messageOrder.push(el.message_id))
+            return bot.sendMessage(chatId, addComment, createBtn(btnAddComment)).then(el => messageOrder.push(el.message_id))
         }
         if (text.includes('/comment')) {
             objOrder.comment = text.toLowerCase().replace(/\/comment/g, '')
@@ -120,26 +118,19 @@ const start = () => {
             deleteMessage(messageOrder)
             messageOrder = []
             await bot.sendMessage(fastfoodMenuGrum, text.toLowerCase().replace(/\/support/g, ''))
-
-            return bot.sendMessage(chatId, 'Ваше сообщение отправленно в службу поддержки').then(el => messageOrder.push(el.message_id))
-
+            return bot.sendMessage(chatId, supportSuccsess).then(el => messageOrder.push(el.message_id))
         }
-        return bot.sendMessage(chatId, 'Не верная команда')
+        return bot.sendMessage(chatId, wrongСommand)
 
     })
     ////////////////////////////////////////////////////////////////////
 
     bot.on('callback_query', async el => {
-
+        console.log(el);
         const chatId = el.message.chat.id
         const callbackData = el.data
-        // const textAdminChanel = el.message.text
-
-
-        // console.log(el);
-
+        const userName = el.from.first_name
         
-
         const showOrders = (arr) => {
             arr.map(el => {
                 return bot.sendMessage(
@@ -154,102 +145,27 @@ const start = () => {
                     { parse_mode: 'HTML' })
             })
         }
-        const supportResponse = () => {
-            bot.sendMessage(chatId,
-                `Введите ваш запрос и наша администрация ответит в ближайшее время.
-                (Перед сообщением поставьте команду "support")`)
-        }
-        const promoCode = () => {
-
-            const subscribeBtn = {
-                reply_markup: {
-                    inline_keyboard: [[{ text: 'Подписаться', callback_data: 'subscribe' }]]
-                }
-            }
-            bot.sendMessage(chatId,
-                `Подпишитесь на наш канал чтобы получить промокод на бесплатную доставку и возможность получать новые промо-коды`, subscribeBtn)
-        }
-     
-        const backBtn = async(message = 'Вернуться назад') => {
-            const back = {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'BACK', callback_data: 'btnBack' }],
-                    ]
-                }
-            }
-            await bot.sendMessage(chatId, message, back).then(prop => botMessageId.push(prop.message_id))
-        }
         const subMenuShow = async (textBtn, callbackData) => {
             const btn = {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: textBtn, callback_data: callbackData }],
-
                     ]
                 }
             }
             let url = './img/burger.jpg'
             await bot.sendPhoto(chatId, url, btn).then(prop => botMessageId.push(prop.message_id))
         }
-
+        const backBtn = async(message = 'Вернуться назад') => {
+            await bot.sendMessage(chatId, message, createBtn(btnBackSubMenu))
+                .then(prop => botMessageId.push(prop.message_id))
+        }
         const listFood = (arr) => {
             arr.map((el) => subMenuShow(el.textBtn, el.callbackData))
-            setTimeout(()=>backBtn(),500)
+            setTimeout(() => backBtn(), 1000)
         }
-
-        const messegeOrder = (callback) => {
-
-            const result = (obj, user) => {
-                bot.sendMessage(idAdminPanel, `Заказ №1: ${obj.title}\n Пользователь: ${user}\n Подписка: нет \n *${obj.comment}*\n Цена (с доставкой): 350грн \n Оплачено: ${obj.pay}`,createBtn(btnResultStatus))
-            }
-
-            switch (callback) {
-                case 'addOrder':
-                    deleteMessage(messageOrder)
-                    messageOrder = []
-                    return bot.sendMessage(chatId, 'Позиция успешно добавлена!\n Желаете добавить что-то ущё?', createBtn(btnAddAddOrder)).then(el => messageOrder.push(el.message_id))
-                case 'addAddOrder':
-
-                    deleteMessage(messageOrder)
-                    return messageOrder = []
-                case 'payOrder':
-                case 'editData':
-                    deleteMessage(messageOrder)
-                    messageOrder = []
-                    return bot.sendMessage(chatId, 'Введите адрес доставки \n Введите команду "/address" перед сообщением', createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
-                case 'yes':
-                    return bot.sendMessage(chatId, 'Введите ваш коментарий \n Введите команду "/comment" перед сообщением', createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
-                case 'no':
-                    return descriptionOfTheFutureOrder()
-                case 'pay':
-                    deleteMessage(messageOrder)
-                    messageOrder = []
-                    return bot.sendMessage(chatId, 'Выберите способ оплаты:', createBtn(btnPaymentMethod))
-                case 'card':
-                    objOrder.pay = callback
-                    result(objOrder, userName)
-
-                    return bot.sendMessage(chatId, 'Заказ уже готовится! \n курьер приедит к вам с терминалом. \n Приятного аппетита')
-                case 'cash':
-                    objOrder.pay = callback
-                    result(objOrder, userName)
-                    return bot.sendMessage(chatId, 'Заказ уже готовится! \n К оплате 350$(чаевые курьеру приветствуются).\n Приятного аппетита')
-              
-
-                case 'back':
-                    deleteMessage(messageOrder)
-                    return messageOrder = []
-                case 'cancel':
-                    deleteMessage(messageOrder)
-                    deleteMessage(botMessageId)
-                    botMessageId= []
-                    return messageOrder = []
-               
-
-                default:
-                    return bot.sendMessage(chatId, 'Неверная команда messegeOrder')
-            }
+        const result = (obj, user) => {
+            bot.sendMessage(idAdminPanel, `Заказ №1: ${obj.title}\n Пользователь: ${user}\n Подписка: нет \n *${obj.comment}*\n Цена (с доставкой): 350грн \n Оплачено: ${obj.pay}`, createBtn(btnResultStatus))
         }
         const ordersMenu = (arr, callback) => {
            
@@ -261,12 +177,9 @@ const start = () => {
                     return
 
                 default:
-                    return messegeOrder(callback)
+                    return bot.sendMessage(chatId, wrongСommand)
             }
         }
-       
-
-
         const callbackDataArr = (objData) => {
             let arr = []
             for (let data in objData) {
@@ -282,22 +195,16 @@ const start = () => {
             switch (callback) {
                 case 'order':
                     return showOrders(completedOrders)
-
                 case 'menu':
-                    return bot.sendMessage(chatId, `Что именно вас инетересует?`, createBtn(menuBtn))
-
+                    return bot.sendMessage(chatId, question, createBtn(menuBtn))
                 case 'promo':
-                    return promoCode()
-
+                    return bot.sendMessage(chatId, subscribe, subscribeBtn)
                 case 'support':
-                    return supportResponse()
-
+                    return bot.sendMessage(chatId, support)
                 case 'subscribe':
-                    bot.sendMessage(chatId, 'Благодарим вас за подписку!',)
+                    bot.sendMessage(chatId, thanksSubscribing,)
                     return objOrder.subscribe = true
-
                 case 'menuBtn':
-                    
                     return await listFood(objbtnTitle.menu)
                 case 'pizza':
                     return listFood(objbtnTitle.pizza)
@@ -307,15 +214,48 @@ const start = () => {
                     return listFood(objbtnTitle.drink)
                 case 'btnBack':
                     deleteMessage(botMessageId)
-                    return botMessageId = []
+                    return botMessageId = [] ///////
+                case 'addOrder':
+                    deleteMessage(messageOrder)
+                    messageOrder = []
+                    return bot.sendMessage(chatId, addOrder, createBtn(btnAddAddOrder))
+                        .then(el => messageOrder.push(el.message_id))
+                case 'addAddOrder':
+                    deleteMessage(messageOrder)
+                    return messageOrder = []
+                case 'payOrder':
+                case 'editData':
+                    deleteMessage(messageOrder)
+                    messageOrder = []
+                    return bot.sendMessage(chatId, addressText, createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
+                case 'yes':
+                    return bot.sendMessage(chatId, enterCommentText, createBtn(btnBack)).then(el => messageOrder.push(el.message_id))
+                case 'no':
+                    return descriptionOfTheFutureOrder()
+                case 'pay':
+                    deleteMessage(messageOrder)
+                    messageOrder = []
+                    return bot.sendMessage(chatId, paymentMethodText, createBtn(btnPaymentMethod))
+                case 'card':
+                    objOrder.pay = callback
+                    result(objOrder, userName)
+                    return bot.sendMessage(chatId, paymentCardText)
+                case 'cash':
+                    objOrder.pay = callback
+                    result(objOrder, userName)
+                    return bot.sendMessage(chatId, paymentCashText)
+                case 'back':
+                    deleteMessage(messageOrder)
+                    return messageOrder = []
+                case 'cancel':
+                    deleteMessage(messageOrder)
+                    deleteMessage(botMessageId)
+                    botMessageId = []
+                    return messageOrder = []
                 default:
                     return ordersMenu(dataArr, callback)
             }
         }
-
-
-
-        // console.log(objOrder);
 
         baseMenu(callbackData, callbackDataArr(objbtnTitle))
 
